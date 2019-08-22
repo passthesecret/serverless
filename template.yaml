@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  PassTheSecret Serverless Application
+
+Globals:
+  Function:
+    Timeout: 300
+
+Parameters:
+  SwaggerUri:
+    Type: String
+Resources:
+  PassTheSecretAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: !Ref SwaggerUri
+  CreateSecret:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: passthesecret/
+      Handler: app.create_secret
+      Runtime: python3.7
+      Environment:
+        Variables:
+          CONFIGURATION_TABLE: !Ref ConfigurationTable
+      Events:
+        CreateSecret:
+          Type: Api
+          Properties:
+            RestApiId: !Ref "PassTheSecretAPI"
+            Path: /secret
+            Method: GET
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Query
+              Resource:
+                - !GetAtt ConfigurationTable.Arn
+  ConfigurationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5

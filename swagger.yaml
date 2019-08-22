@@ -1,0 +1,113 @@
+openapi: 3.0.0
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/ckabalan/passthesecret/0.1.0
+info:
+  title: PassTheSecret
+  version: "0.1.0"
+  description: |
+    To be filled out later
+  contact:
+    name: Caesar Kabalan
+    email: caesar.kabalan@gmail.com
+  license:
+    name: GNU General Public License v3.0
+    url: 'https://www.gnu.org/licenses/gpl-3.0.en.html'
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
+tags:
+  - name: secret
+    description: Interacting with Secrets Data
+paths:
+  /secret:
+    post:
+      tags:
+        - secret
+      summary: Create a new secret
+      operationId: createSecret
+      requestBody:
+        description: Secret content and parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSecretRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewSecretResponse'
+        '405':
+          description: Invalid input
+  '/secret/{requestString}':
+    get:
+      tags:
+        - secret
+      summary: Retrieve (and sometimes consume) a secret using the request string
+      description: Returns the secret data
+      operationId: getSecret
+      parameters:
+        - name: requestString
+          in: path
+          description: String which represents the secret identifier followed by the decryption/wipe string
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
+        '404':
+          description: Secret not found, or found and decryption unsuccessful
+      security:
+        - api_key: []
+components:
+  schemas:
+    NewSecretRequest:
+      type: object
+      properties:
+        secret:
+          type: string
+        expire_in_seconds:
+          type: integer
+          format: int32
+        burn_after_reading:
+          type: boolean
+        encryption_key_length:
+          type: integer
+          format: int32
+      required:
+        - secret
+      example:
+        secret: 'Thisisapassword!'
+        expire_in_seconds: 86400
+        burn_after_reading: false
+        encryption_key_length: 20
+    NewSecretResponse:
+      type: object
+      properties:
+        view_request_string:
+          type: string
+        wipe_request_string:
+          type: string
+      required:
+        - view_request_string
+        - wipe_request_string
+      example:
+        view_request_string: 'ICwsxBmDZNceXuSzYFOls4obABnmSfdhIiKE5LiW'
+        wipe_request_string: 'ICwsxBmDSnH71nFZUraLKHkHS3L6Yb8RRssfEm2t'
+    Secret:
+      type: object
+      properties:
+        secret:
+          type: string
+      required:
+        - secret
+      example:
+        secret: 'Thisisapassword!'
