@@ -1,0 +1,39 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  GitlabCIUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: GitLab-CI
+      Policies:
+        - PolicyName: Allow_CI_Actions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: '*'
+                Effect: Allow
+                Action:
+                  - cloudformation:*
+                  - cloudfront:*
+                  - s3:*
+                  - iam:CreateServiceLinkedRole
+              - Resource: !GetAtt CFNDeploymentRole.Arn
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+  
+  CFNDeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GitLab-CI-CFN-Role
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AdministratorAccess

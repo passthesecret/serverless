@@ -1,0 +1,126 @@
+default:
+  image: passthesecret/ci-build-environment:latest
+
+variables:
+  DEV_ACCOUNT: "740518257456"
+  DEV_REGION: us-east-1
+  DEV_SUFFIX: DV
+  STAGING_ACCOUNT: "740518257456"
+  STAGING_REGION: us-east-1
+  STAGING_SUFFIX: ST
+  PROD_ACCOUNT: "740518257456"
+  PROD_REGION: us-east-1
+  PROD_SUFFIX: PD
+  SAM_CLI_TELEMETRY: 0
+  CI_BUCKET: passthesecret-ci-bucket
+  CFN_DEPLOY_ROLE_NAME: GitLab-CI-CFN-Role
+  STACK_PREFIX: PassTheSecret-SAM
+  AWS_DEFAULT_OUTPUT: json
+  #CI_BUCKET: my-ci-bucket #'ArtifactBucket' output from deployed setup-templates/ci-bucket.yaml
+  #CI_ROLE_NAME: gitlab-ci-deployment #'SharedServiceRoleName' output from deployed setup-templates/roles.yaml
+  #DEPLOYMENT_ROLE_NAME: gitlab-ci-passed-role #'SharedDeploymentRoleName' output from deployed x-account-roles/roles.yaml
+  #DEV_ACM_CERT_ID: asdfg12-sdfa-asdf-1234-0a2b3c4f5gasdf #OPTIONAL - only needed if you want a DNS name for your review apps.
+  #DEV_HOSTED_ZONE_NAME: dev.mycompany.com #OPTIONAL - only needed if you want a DNS name for your review apps. Don't include trailing dot
+  #PROD_ACM_CERT_ID: asdfg12-sdfa-asdf-1234-0a2b3c4f5gasdf #OPTIONAL - only needed if you want a DNS name for your review apps.
+  #PROD_HOSTED_ZONE_NAME: prod.mycompany.com #OPTIONAL - only needed if you want a DNS name for your review apps. Don't include trailing dot
+  #SES_SENDER_ADDRESS: email@mycompany.com #Email address to send weekly emails from
+  #STAGING_ACM_CERT_ID: asdfg12-sdfa-asdf-1234-0a2b3c4f5gasdf #OPTIONAL - only needed if you want a DNS name for your review apps.
+  #STAGING_HOSTED_ZONE_NAME: staging.mycompany.com #OPTIONAL - only needed if you want a DNS name for your review apps. Don't include trailing dot
+  #image: lambci/lambda #Docker image to use for build jobs - should have Python 3 installed
+
+.dev_variables: &dev_variables
+  STAGE: ${CI_COMMIT_REF_NAME}
+  ACCOUNT: ${DEV_ACCOUNT}
+  SUFFIX: ${DEV_SUFFIX}
+  AWS_DEFAULT_REGION: ${DEV_REGION}
+  CI_ROLE: "arn:aws:iam::${DEV_ACCOUNT}:role/${CI_ROLE_NAME}"
+  CFN_DEPLOY_ROLE: "arn:aws:iam::${DEV_ACCOUNT}:role/${CFN_DEPLOY_ROLE_NAME}"
+  STACK_NAME: "${STACK_PREFIX}-${DEV_SUFFIX}"
+  ## HOSTED_ZONE_NAME: ${DEV_HOSTED_ZONE_NAME} ==>
+  #ACM_CERT_ARN: arn:aws:acm:${DEV_REGION}:${DEV_ACCOUNT}:certificate/${DEV_ACM_CERT_ID}
+  #VERIFIED_SES_SENDER: arn:aws:ses:${DEV_REGION}:${DEV_ACCOUNT}:identity/${SES_SENDER_ADDRESS}
+
+cache:
+  key: ${CI_COMMIT_REF_NAME}
+  untracked: true
+
+stages:
+  #- test
+  - build-dev
+  - deploy-dev
+
+.build_script: &build_script
+  script: |
+    echo '===== SAM BUILD ====='
+    sam build
+    echo '===== UPLOAD SWAGGER.YAML ====='
+    SWAGGER_HASH=$(sha256sum swagger.yaml | cut -f1 -d' ')
+    aws s3api put-object --bucket ${CI_BUCKET} --key $SWAGGER_HASH --body swagger.yaml
+    echo '===== CLOUDFORMATION PACKAGE ====='
+    aws cloudformation package --template-file template.yaml --s3-bucket ${CI_BUCKET} --output-template-file packaged.yaml
+
+.deploy_script: &deploy_script
+  script: |
+    echo "===== CLOUDFORMATION DEPLOY ====="
+    SWAGGER_HASH=$(sha256sum swagger.yaml | cut -f1 -d' ')
+    aws cloudformation deploy \
+      --stack-name ${STACK_NAME} \
+      --template-file ${CI_PROJECT_DIR}/packaged.yaml \
+      --role-arn ${CFN_DEPLOY_ROLE} \
+      --no-fail-on-empty-changeset \
+      --parameter-overrides \
+        SwaggerUri="s3://${CI_BUCKET}/$SWAGGER_HASH" \
+      --capabilities CAPABILITY_NAMED_IAM
+      ./deployment/scripts/cfn-wait.sh ${STACK_NAME} ${REGION}
+
+
+#test:unit:
+#  stage: test
+#  only:
+#    - branches
+#  script: |
+#    echo "This test will happen some day..."
+#    #if test -f package.json; then
+#    #  npm install --loglevel error;
+#    #  npm run test;
+#    #elif test -f requirements.txt; then
+#    #    pip install -r requirements.txt
+#    #    python -m pytest --ignore=functions/
+#    #elif test -f pom.xml; then
+#    #    mvn verify
+#    #else
+#    #  echo "no test file found to run tests from";
+#    #fi
+
+build:dev:
+  stage: build-dev
+  <<: *build_script
+  variables:
+    <<: *dev_variables
+  #artifacts:
+  #  paths:
+  #    - deployment.yaml
+  #    - assume-role.sh
+  #    - cfn-wait.sh
+  #  expire_in: 1 week
+  only:
+    - branches
+  except:
+    - master
+
+deploy:dev:
+  <<: *deploy_script
+  stage: deploy-dev
+  dependencies: 
+    - build:dev
+  variables:
+    <<: *dev_variables
+  #environment:
+  #  name: review/$CI_COMMIT_REF_NAME
+  #  url: https://${CI_COMMIT_REF_NAME}.${DEV_HOSTED_ZONE_NAME}/services
+  #  on_stop: stop:dev
+  only:
+    - branches
+  except:
+    - master
+
