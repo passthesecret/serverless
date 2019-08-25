@@ -71,7 +71,6 @@ stages:
       --parameter-overrides \
         SwaggerUri="s3://${CI_BUCKET}/$SWAGGER_HASH" \
       --capabilities CAPABILITY_NAMED_IAM
-      ./deployment/scripts/cfn-wait.sh ${STACK_NAME} ${REGION}
 
 
 #test:unit:

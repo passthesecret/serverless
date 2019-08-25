@@ -1,10 +1,12 @@
 openapi: 3.0.0
+# Added by API Auto Mocking Plugin
 servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/ckabalan/passthesecret/0.1.0
 info:
-  title: PassTheSecret
-  version: "0.1.0"
+  title:
+    Fn::Sub: '${AWS::StackName}'
+  version: "1.0.0"
   description: |
     To be filled out later
   contact:
@@ -42,6 +44,15 @@ paths:
                 $ref: '#/components/schemas/NewSecretResponse'
         '405':
           description: Invalid input
+      x-amazon-apigateway-integration:
+        type: 'aws_proxy'
+        # WHY?! https://github.com/amazon-archives/aws-apigateway-importer/issues/9#issuecomment-129651005
+        httpMethod: 'POST'
+        uri:
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateSecret.Arn}/invocations'
+        responses:
+          default:
+            statusCode: 200
   '/secret/{requestString}':
     get:
       tags:
@@ -65,8 +76,15 @@ paths:
                 $ref: '#/components/schemas/Secret'
         '404':
           description: Secret not found, or found and decryption unsuccessful
-      security:
-        - api_key: []
+      x-amazon-apigateway-integration:
+        type: 'aws_proxy'
+        # WHY?! https://github.com/amazon-archives/aws-apigateway-importer/issues/9#issuecomment-129651005
+        httpMethod: 'POST'
+        uri:
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetSecret.Arn}/invocations'
+        responses:
+          default:
+            statusCode: 200
 components:
   schemas:
     NewSecretRequest:

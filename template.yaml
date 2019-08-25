@@ -35,6 +35,30 @@ Resources:
           Properties:
             RestApiId: !Ref "PassTheSecretAPI"
             Path: /secret
+            Method: POST
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Query
+              Resource:
+                - !GetAtt ConfigurationTable.Arn
+  GetSecret:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: passthesecret/
+      Handler: app.get_secret
+      Runtime: python3.7
+      Environment:
+        Variables:
+          CONFIGURATION_TABLE: !Ref ConfigurationTable
+      Events:
+        CreateSecret:
+          Type: Api
+          Properties:
+            RestApiId: !Ref "PassTheSecretAPI"
+            Path: /secret/{requestString}
             Method: GET
       Policies:
         - Statement:
