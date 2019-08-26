@@ -97,16 +97,12 @@ components:
           format: int32
         burn_after_reading:
           type: boolean
-        encryption_key_length:
-          type: integer
-          format: int32
       required:
         - secret
       example:
         secret: 'Thisisapassword!'
         expire_in_seconds: 86400
         burn_after_reading: false
-        encryption_key_length: 20
     NewSecretResponse:
       type: object
       properties:
