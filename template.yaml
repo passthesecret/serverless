@@ -28,7 +28,7 @@ Resources:
       Runtime: python3.7
       Environment:
         Variables:
-          CONFIGURATION_TABLE: !Ref ConfigurationTable
+          PTS_DDB_SECRET_TABLE: !Ref SecretTable
       Events:
         CreateSecret:
           Type: Api
@@ -43,7 +43,7 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:Query
               Resource:
-                - !GetAtt ConfigurationTable.Arn
+                - !GetAtt SecretTable.Arn
   GetSecret:
     Type: AWS::Serverless::Function
     Properties:
@@ -52,7 +52,7 @@ Resources:
       Runtime: python3.7
       Environment:
         Variables:
-          CONFIGURATION_TABLE: !Ref ConfigurationTable
+          PTS_DDB_SECRET_TABLE: !Ref SecretTable
       Events:
         CreateSecret:
           Type: Api
@@ -67,8 +67,8 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:Query
               Resource:
-                - !GetAtt ConfigurationTable.Arn
-  ConfigurationTable:
+                - !GetAtt SecretTable.Arn
+  SecretTable:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
