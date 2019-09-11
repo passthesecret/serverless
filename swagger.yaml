@@ -1,5 +1,4 @@
 openapi: 3.0.0
-# Added by API Auto Mocking Plugin
 servers:
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/ckabalan/passthesecret/0.1.0
@@ -106,16 +105,16 @@ components:
     NewSecretResponse:
       type: object
       properties:
-        view_request_string:
+        secret_request_string:
           type: string
         wipe_request_string:
           type: string
       required:
-        - view_request_string
+        - secret_request_string
         - wipe_request_string
       example:
-        view_request_string: 'ICwsxBmDZNceXuSzYFOls4obABnmSfdhIiKE5LiW'
-        wipe_request_string: 'ICwsxBmDSnH71nFZUraLKHkHS3L6Yb8RRssfEm2t'
+        secret_request_string: 'e502220425a6473eb5075abbd5f772d16h3azUk_SChlOCJzl1rcPvVeXSGjCsLRA8j7sz8uoTs='
+        wipe_request_string: 'e502220425a6473eb5075abbd5f772d1qgIIfSCEzvy4mvkpFZwv-s0t83WupBBJfLpWGZGJJb0='
     Secret:
       type: object
       properties:
