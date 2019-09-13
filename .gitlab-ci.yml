@@ -79,7 +79,7 @@ test:unit:
     - branches
   script: |
     pip install -r passthesecret/requirements.txt
-    python -m unittest
+    python -m unittest --verbose
 
 build:dev:
   stage: build-dev
