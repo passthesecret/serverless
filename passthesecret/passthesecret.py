@@ -1,9 +1,13 @@
 import json
 import os
 from ptscore.manager import Manager
-from ptscore.storage.dynamodb import DynamoDB
 
-manager = Manager(DynamoDB())
+if 'PTS_DDB_SECRET_TABLE' in os.environ:
+    from ptscore.storage.dynamodb import DynamoDB
+    manager = Manager(DynamoDB())
+else:
+    from ptscore.storage.memorydb import MemoryDB
+    manager = Manager(MemoryDB())
 
 def create_secret(event, context):
     body = json.loads(event['body'])

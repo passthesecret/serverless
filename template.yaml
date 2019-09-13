@@ -24,7 +24,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: passthesecret/
-      Handler: app.create_secret
+      Handler: passthesecret.create_secret
       Runtime: python3.7
       Environment:
         Variables:
@@ -40,15 +40,14 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                - dynamodb:GetItem
-                - dynamodb:Query
+                - dynamodb:PutItem
               Resource:
                 - !GetAtt SecretTable.Arn
   GetSecret:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: passthesecret/
-      Handler: app.get_secret
+      Handler: passthesecret.get_secret
       Runtime: python3.7
       Environment:
         Variables:
@@ -65,7 +64,7 @@ Resources:
             - Effect: Allow
               Action:
                 - dynamodb:GetItem
-                - dynamodb:Query
+                - dynamodb:DeleteItem
               Resource:
                 - !GetAtt SecretTable.Arn
   SecretTable:

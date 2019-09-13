@@ -45,7 +45,7 @@ cache:
   untracked: true
 
 stages:
-  #- test
+  - test
   - build-dev
   - deploy-dev
 
@@ -73,23 +73,13 @@ stages:
       --capabilities CAPABILITY_NAMED_IAM
 
 
-#test:unit:
-#  stage: test
-#  only:
-#    - branches
-#  script: |
-#    echo "This test will happen some day..."
-#    #if test -f package.json; then
-#    #  npm install --loglevel error;
-#    #  npm run test;
-#    #elif test -f requirements.txt; then
-#    #    pip install -r requirements.txt
-#    #    python -m pytest --ignore=functions/
-#    #elif test -f pom.xml; then
-#    #    mvn verify
-#    #else
-#    #  echo "no test file found to run tests from";
-#    #fi
+test:unit:
+  stage: test
+  only:
+    - branches
+  script: |
+    pip install -r passthesecret/requirements.txt
+    python -m unittest
 
 build:dev:
   stage: build-dev
