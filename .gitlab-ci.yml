@@ -78,7 +78,7 @@ test:unit:
   only:
     - branches
   script: |
-    pip install -r requirements.txt
+    pip install -r passthesecret/requirements.txt
     python -m unittest --verbose
 
 build:dev:
