@@ -52,7 +52,7 @@ stages:
 .build_script: &build_script
   script: |
     echo '===== SAM BUILD ====='
-    sam build
+    sam build --use-container
     echo '===== UPLOAD SWAGGER.YAML ====='
     SWAGGER_HASH=$(sha256sum swagger.yaml | cut -f1 -d' ')
     aws s3api put-object --bucket ${CI_BUCKET} --key $SWAGGER_HASH --body swagger.yaml
