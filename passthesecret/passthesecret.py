@@ -9,6 +9,7 @@ else:
     from ptscore.storage.memorydb import MemoryDB
     manager = Manager(MemoryDB())
 
+
 def create_secret(event, context):
     body = json.loads(event['body'])
     # Sanitize Secret Field

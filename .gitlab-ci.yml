@@ -57,7 +57,10 @@ stages:
     SWAGGER_HASH=$(sha256sum swagger.yaml | cut -f1 -d' ')
     aws s3api put-object --bucket ${CI_BUCKET} --key $SWAGGER_HASH --body swagger.yaml
     echo '===== CLOUDFORMATION PACKAGE ====='
-    aws cloudformation package --template-file template.yaml --s3-bucket ${CI_BUCKET} --output-template-file packaged.yaml
+    # This is failing, see https://github.com/aws/aws-cli/issues/4497
+    # aws cloudformation package --template-file template.yaml --s3-bucket ${CI_BUCKET} --output-template-file packaged.yaml
+    # Workaround:
+    sam package --s3-bucket ${CI_BUCKET} --output-template-file packaged.yaml
 
 .deploy_script: &deploy_script
   script: |
