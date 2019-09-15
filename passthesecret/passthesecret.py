@@ -44,15 +44,9 @@ def get_secret(event, context):
     try:
         get_response = manager.get_secret(event['pathParameters']['requestString'])
     except ValueError as err:
-        return {
-            'statusCode': 400,
-            'body': err
-        }
+        return {'statusCode': 400, 'body': err.args[0]}
     except LookupError as err:
-        return {
-            'statusCode': 404,
-            'body': 'Not Found'
-        }
+        return {'statusCode': 404, 'body': 'Not Found'}
     return {
         'statusCode': 200,
         'body': json.dumps(get_response)
