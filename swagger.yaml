@@ -35,23 +35,23 @@ paths:
             schema:
               $ref: '#/components/schemas/NewSecretRequest'
       responses:
-        '200':
+        '201':
           description: Successful operation
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NewSecretResponse'
-        '405':
-          description: Invalid input
+        '400':
+          description: Invalid input, request must contain a JSON object with a secret field of at least one character.
       x-amazon-apigateway-integration:
         type: 'aws_proxy'
         # WHY?! https://github.com/amazon-archives/aws-apigateway-importer/issues/9#issuecomment-129651005
         httpMethod: 'POST'
         uri:
           Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateSecret.Arn}/invocations'
-        responses:
-          default:
-            statusCode: 200
+        #responses:
+        #  default:
+        #    statusCode: 200
   '/secret/{requestString}':
     get:
       tags:
@@ -73,17 +73,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
+        '400':
+          description: Malformed request string
         '404':
           description: Secret not found, or found and decryption unsuccessful
+      security:
+        - api_key: []
       x-amazon-apigateway-integration:
         type: 'aws_proxy'
         # WHY?! https://github.com/amazon-archives/aws-apigateway-importer/issues/9#issuecomment-129651005
         httpMethod: 'POST'
         uri:
           Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetSecret.Arn}/invocations'
-        responses:
-          default:
-            statusCode: 200
+        #responses:
+        #  default:
+        #    statusCode: 200
 components:
   schemas:
     NewSecretRequest:

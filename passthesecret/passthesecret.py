@@ -14,9 +14,9 @@ def create_secret(event, context):
     body = json.loads(event['body'])
     # Sanitize Secret Field
     if 'secret' not in body:
-        return {'statusCode': 422, 'body': 'Request Must Contain Secret Field'}
+        return {'statusCode': 400, 'body': 'Request Must Contain Secret Field'}
     elif len(body['secret']) == 0:
-        return {'statusCode': 422, 'body': 'Secret Must Be At Least One Character'}
+        return {'statusCode': 400, 'body': 'Secret Must Be At Least One Character'}
     else:
         secret = body['secret']
     # Sanitize Expiration Field
@@ -35,7 +35,7 @@ def create_secret(event, context):
     create_response = manager.create_secret(secret, expire_in_seconds, burn_after_reading)
     # Return The URLs to The User
     return {
-        'statusCode': 200,
+        'statusCode': 201,
         'body': json.dumps(create_response)
     }
 
@@ -45,7 +45,7 @@ def get_secret(event, context):
         get_response = manager.get_secret(event['pathParameters']['requestString'])
     except ValueError as err:
         return {
-            'statusCode': 422,
+            'statusCode': 400,
             'body': err
         }
     except LookupError as err:

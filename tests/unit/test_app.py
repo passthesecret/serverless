@@ -11,7 +11,7 @@ class TestApp(unittest.TestCase):
             {'body': '{\n "secret": "' + plaintext + '",\n "expire_in_seconds": 43200,\n "burn_after_reading": false\n}'},
             {}
         )
-        self.assertEqual(response['statusCode'], 200)
+        self.assertEqual(response['statusCode'], 201, 'Secret Creation Response Does Not Return 201')
         body = json.loads(response['body'])
         self.assertEqual(len(body['secret_request_string']), 76, 'Secret Request String Not 76 Characters')
         self.assertEqual(len(body['wipe_request_string']), 76, 'Wipe Request String Not 76 Characters')
@@ -30,15 +30,15 @@ class TestApp(unittest.TestCase):
         )
         get_body = json.loads(get_response['body'])
         # Test Secret Matches
-        self.assertEqual(get_response['statusCode'], 200, 'Retrieved Secret Does Return 200 Status Code')
+        self.assertEqual(get_response['statusCode'], 200, 'Retrieved Secret Does Return 201 Status Code')
         self.assertEqual(get_body['secret'], plaintext, 'Retrieved Secret Does Not Match Stored Secret')
         # Test Totally Wrong Secret Request String
         get_response = passthesecret.get_secret(
             {'pathParameters': {'requestString': create_body['secret_request_string'][::-1]}},
             {}
         )
-        self.assertEqual(get_response['statusCode'], 422,
-                         'Invalid Secret Request String (Reversed) Does Not Raise 422 Error')
+        self.assertEqual(get_response['statusCode'], 400,
+                         'Invalid Secret Request String (Reversed) Does Not Raise 400 Error')
         # Test Secret Request String With Invalid UUID
         invalid_request = 'x' + create_body['secret_request_string'][1:]
         get_response = passthesecret.get_secret(
@@ -46,15 +46,15 @@ class TestApp(unittest.TestCase):
             {}
         )
         # Test Secret Request String With Invalid UUID
-        self.assertEqual(get_response['statusCode'], 422,
-                         'Invalid Secret Request String (Invalid UUID) Does Not Raise 422 Error')
+        self.assertEqual(get_response['statusCode'], 400,
+                         'Invalid Secret Request String (Invalid UUID) Does Not Raise 400 Error')
         # Test Secret Request String With Invalid Fernet Key
         invalid_request = create_body['secret_request_string'][:-1] + '*'
         get_response = passthesecret.get_secret(
             {'pathParameters': {'requestString': invalid_request}},
             {}
         )
-        self.assertEqual(get_response['statusCode'], 422,
+        self.assertEqual(get_response['statusCode'], 400,
                          'Invalid Secret Request String (Invalid Fernet Key) Does Not Raise Error')
 
     def test_get_consumable_secret(self):
